@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0a0a0f"/>
+    </linearGradient>
+    <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e0e7ff"/>
+      <stop offset="100%" stop-color="#a5b4fc"/>
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <circle cx="32" cy="32" r="30" fill="url(#bgGrad)"/>
+  
+  <!-- Sun glow -->
+  <circle cx="24" cy="28" r="14" fill="url(#sunGrad)" opacity="0.9" filter="url(#glow)"/>
+  
+  <!-- Cloud shape -->
+  <g filter="url(#shadow)">
+    <ellipse cx="36" cy="36" rx="16" ry="10" fill="url(#cloudGrad)"/>
+    <ellipse cx="28" cy="38" rx="10" ry="8" fill="url(#cloudGrad)"/>
+    <ellipse cx="44" cy="38" rx="8" ry="6" fill="url(#cloudGrad)"/>
+    <ellipse cx="36" cy="32" rx="8" ry="6" fill="#f8fafc"/>
+  </g>
+  
+  <!-- Accent line -->
+  <path d="M12 52 Q32 48 52 52" stroke="url(#glowGrad)" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>
+  
+  <!-- "CW" text minimal -->
+  <text x="32" y="58" text-anchor="middle" font-family="system-ui, sans-serif" font-size="8" font-weight="800" fill="#6366f1" opacity="0.8">CW</text>
+</svg>
