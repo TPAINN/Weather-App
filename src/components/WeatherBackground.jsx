@@ -370,8 +370,9 @@ function CloudLayer({ clouds }) {
         h: isStratus ? 22 + (i % 3) * 9 : isStorm ? 55 + (i % 4) * 18 : 35 + ((i * 41) % 50),
         blur: isStratus ? 18 : isStorm ? 25 : 10 + ((i * 13) % 14),
         op: density * (0.45 + ((i * 17) % 10) / 18),
-        dur: (28 + ((i * 19) % 38)) / speed * 0.001,
-        delay: -(i / count) * 40,
+        // speed range ~0.005–0.055 → dur ~10s–120s (speed * 100 maps to 0.5–5.5)
+        dur: (28 + ((i * 19) % 38)) / (speed * 100),
+        delay: -((i / count) * (28 + ((i * 19) % 38)) / (speed * 100)),
         col: color,
       };
     });
@@ -486,19 +487,22 @@ export default function WeatherBackground({ conditionId = 800, windSpeed = 0, is
       {/* Particles (rain / snow / dust / stars / smoke) */}
       <ParticleCanvas particleCfg={p.particles} />
 
-      {/* Fog bands */}
+      {/* Fog bands — fog.color has trailing comma; close it at 0.82 alpha */}
       {p.fog && (
         <div
           className="atmos-fog"
           style={{
-            '--fog-color': p.fog.color,
-            '--fog-density': p.fog.density,
             opacity: p.fog.density,
+            background: `linear-gradient(to bottom,
+              transparent 0%,
+              ${p.fog.color}0.82) 35%,
+              ${p.fog.color}0.92) 60%,
+              transparent 100%)`,
           }}
         />
       )}
 
-      {/* Haze tint */}
+      {/* Haze tint — haze.color has trailing comma; close it */}
       {p.haze && (
         <div style={{
           position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none',
