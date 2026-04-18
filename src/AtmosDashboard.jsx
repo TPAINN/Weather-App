@@ -21,7 +21,7 @@ const getTemperatureColor = (temp) => {
     coldest: [14, 165, 233], // Deep Cyan-Blue (-10C)
     cold: [56, 189, 248],    // Bright Light Blue (0C)
     mild: [167, 139, 250],   // Soft Violet (15C - perfectly skips Green!)
-    warm: [251, 146, 60],    // Orange (25C)
+    warm: [251, 146, 60],   // Orange (25C)
     hot: [239, 68, 68]       // Red (40C)
   };
 
@@ -30,6 +30,17 @@ const getTemperatureColor = (temp) => {
   if (t <= 25) return interpolateRGB(colors.mild, colors.warm, (t - 15) / 10);
   return interpolateRGB(colors.warm, colors.hot, (t - 25) / 15);
 };
+
+// Generate random positions for constellation dots
+const constellationDots = Array.from({ length: 8 }, (_, i) => ({
+  id: i,
+  style: {
+    left: `${Math.random() * 90 + 5}%`,
+    top: `${Math.random() * 90 + 5}%`,
+    animationDelay: `${Math.random() * 3}s`,
+    animationDuration: `${2 + Math.random() * 2}s`
+  }
+}));
 
 const AtmosDashboard = () => {
   const engine = useClimateEngine();
@@ -50,17 +61,14 @@ const AtmosDashboard = () => {
     const wind = data.wind.speed; // m/s
     
     // 1. Temperature drives the RGB Color Engine directly
-    // This entirely skips the green/yellow phase utilizing our refined RGB interpolation.
     const isFahrenheit = temp > 55; // Auto-detect F vs C safely
     const normalizedTemp = isFahrenheit ? ((temp - 32) * 5/9) : temp;
     const dynamicColor = getTemperatureColor(normalizedTemp);
 
     // 2. Wind drives the Speed
-    // 0m/s -> gentle base 1.5, High wind (20m/s) -> fast 8.5
     const dynamicSpeed = 1.5 + Math.min(wind / 2.5, 8.5);
 
     // 3. Humidity drives the Noise/Distortion
-    // 0% -> smooth sphere (0.2), 100% -> highly distorted/cloudy (1.5)
     const dynamicNoise = 0.2 + (humidity / 100) * 1.3;
 
     // Retain base CSS structural classes
@@ -145,10 +153,51 @@ const AtmosDashboard = () => {
 
   return (
     <div className={`weather-dashboard ${vibe.className}`}>
+      {/* ============================================
+          2026 ADVANCED BACKGROUND SYSTEM
+          Multi-layered Dynamic Environment
+          ============================================ */}
+      
       {/* 3D Silk background */}
       <Silk color={vibe.color} speed={vibe.speed} noiseIntensity={vibe.noise} />
       
-      {/* Overlay gradient */}
+      {/* Aurora Morphing Blobs - 2026 Trend */}
+      <div className="aurora-container">
+        <div className="aurora-blob aurora-blob-1" />
+        <div className="aurora-blob aurora-blob-2" />
+        <div className="aurora-blob aurora-blob-3" />
+        <div className="aurora-blob aurora-blob-4" />
+      </div>
+      
+      {/* Floating Geometric Orbs - 2026 Trend */}
+      <div className="floating-orbs">
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        <div className="orb orb-3" />
+        <div className="orb orb-4" />
+        <div className="orb orb-5" />
+        <div className="orb orb-6" />
+      </div>
+      
+      {/* Constellation Network - Interactive Elements */}
+      <div className="constellation-grid">
+        {constellationDots.map((dot) => (
+          <div 
+            key={dot.id} 
+            className="constellation-dot"
+            style={dot.style}
+          />
+        ))}
+      </div>
+      
+      {/* Light Leak Effects - Photography Inspired */}
+      <div className="light-leak light-leak-1" />
+      <div className="light-leak light-leak-2" />
+      
+      {/* Noise Texture Overlay */}
+      <div className="noise-overlay" />
+      
+      {/* Soft overlay gradient */}
       <div className="dashboard-overlay" />
       
       {/* Main weather card */}
