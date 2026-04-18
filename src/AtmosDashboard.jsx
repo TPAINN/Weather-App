@@ -1,10 +1,68 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navigation, AlertCircle, Droplets, Wind, Thermometer, Cloud } from 'lucide-react';
 import { useClimateEngine } from './hooks/useClimateEngine';
 import Silk from './components/Silk';
 import MetricCard from './components/MetricCard';
 import SearchIcon from './components/SearchIcon';
+
+// ============================================
+// BACKGROUND PRESET DEFINITIONS
+// ============================================
+
+const BACKGROUND_PRESETS = {
+  aurora: {
+    name: 'Aurora Borealis',
+    description: 'Flowing northern lights',
+    className: 'bg-aurora',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" opacity="0.5"/>
+        <circle cx="12" cy="12" r="4"/>
+      </svg>
+    )
+  },
+  liquid: {
+    name: 'Liquid Glass',
+    description: 'Smooth translucent waves',
+    className: 'bg-liquid',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M2 12c2-2 4-4 6-4s4 2 6 4 4 4 6 4 4-2 4-4"/>
+        <path d="M2 18c2-2 4-4 6-4s4 2 6 4 4 4 6 4 4-2 4-4" opacity="0.5"/>
+      </svg>
+    )
+  },
+  mesh: {
+    name: 'Mesh Gradient',
+    description: 'Vibrant multi-color bloom',
+    className: 'bg-mesh',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="8" cy="8" r="3"/>
+        <circle cx="16" cy="16" r="3"/>
+        <circle cx="16" cy="6" r="2"/>
+        <circle cx="6" cy="16" r="2"/>
+        <path d="M8 11l3 3M13 8l-3 3" opacity="0.5"/>
+      </svg>
+    )
+  },
+  ember: {
+    name: 'Ember & Smoke',
+    description: 'Warm rising particles',
+    className: 'bg-ember',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 22c-4 0-8-2-8-6 0-3 2-5 4-7 1 2 3 3 4 3s3-1 4-3c2 2 4 4 4 7 0 4-4 6-8 6z"/>
+        <path d="M12 22c-2 0-4-1-4-3 0-1.5 1-2.5 2-3.5.5 1 1.5 1.5 2 1.5s1.5-.5 2-1.5c1 1 2 2 2 3.5 0 2-2 3-4 3z" opacity="0.6"/>
+      </svg>
+    )
+  }
+};
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
 
 const interpolateRGB = (c1, c2, factor) => {
   const clamp = Math.max(0, Math.min(1, factor));
@@ -18,11 +76,11 @@ const getTemperatureColor = (temp) => {
   const t = parseFloat(temp);
   
   const colors = {
-    coldest: [14, 165, 233], // Deep Cyan-Blue (-10C)
-    cold: [56, 189, 248],    // Bright Light Blue (0C)
-    mild: [167, 139, 250],   // Soft Violet (15C - perfectly skips Green!)
-    warm: [251, 146, 60],   // Orange (25C)
-    hot: [239, 68, 68]       // Red (40C)
+    coldest: [14, 165, 233],  // Deep Cyan-Blue
+    cold: [56, 189, 248],      // Bright Light Blue
+    mild: [167, 139, 250],      // Soft Violet
+    warm: [251, 146, 60],      // Orange
+    hot: [239, 68, 68]          // Red
   };
 
   if (t <= 0) return interpolateRGB(colors.coldest, colors.cold, (t + 10) / 10);
@@ -31,62 +89,101 @@ const getTemperatureColor = (temp) => {
   return interpolateRGB(colors.warm, colors.hot, (t - 25) / 15);
 };
 
-// Generate random positions for constellation dots
-const constellationDots = Array.from({ length: 8 }, (_, i) => ({
-  id: i,
-  style: {
-    left: `${Math.random() * 90 + 5}%`,
-    top: `${Math.random() * 90 + 5}%`,
-    animationDelay: `${Math.random() * 3}s`,
-    animationDuration: `${2 + Math.random() * 2}s`
-  }
-}));
+const getTemperatureClass = (temp) => {
+  if (temp < 10) return 'bg-temp-cold';
+  if (temp < 20) return 'bg-temp-mild';
+  if (temp < 30) return 'bg-temp-warm';
+  return 'bg-temp-hot';
+};
+
+// ============================================
+// EMBER PARTICLES COMPONENT
+// ============================================
+
+const EmberParticles = () => (
+  <div className="floating-particles">
+    {[...Array(8)].map((_, i) => (
+      <div key={i} className="ember-particle" />
+    ))}
+  </div>
+);
+
+// ============================================
+// THEME SELECTOR COMPONENT
+// ============================================
+
+const ThemeSelector = ({ currentTheme, onThemeChange }) => (
+  <div className="theme-selector">
+    {Object.entries(BACKGROUND_PRESETS).map(([key, preset]) => (
+      <button
+        key={key}
+        className={`theme-btn ${key} ${currentTheme === key ? 'active' : ''}`}
+        onClick={() => onThemeChange(key)}
+        title={preset.name}
+        aria-label={`Switch to ${preset.name} background`}
+      />
+    ))}
+  </div>
+);
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
 
 const AtmosDashboard = () => {
   const engine = useClimateEngine();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [backgroundTheme, setBackgroundTheme] = useState('aurora');
   const searchContainerRef = useRef(null);
   const inputRef = useRef(null);
+  const prevDataRef = useRef(null);
 
-  // Dynamic weather-based visual settings
+  // Dynamic vibe based on weather data with seamless transitions
   const vibe = useMemo(() => {
     const data = engine.data;
-    if (!data) return { color: '#6366f1', speed: 2, noise: 0.4, className: '' };
+    if (!data) {
+      return { 
+        color: '#6366f1', 
+        speed: 2, 
+        noise: 0.4, 
+        weatherClass: '',
+        tempClass: '' 
+      };
+    }
     
-    // Extract precision metrics
-    const temp = data.main.temp; // Assuming Celsius
-    const humidity = data.main.humidity; // 0-100%
-    const wind = data.wind.speed; // m/s
+    const temp = data.main.temp;
+    const humidity = data.main.humidity;
+    const wind = data.wind.speed;
     
-    // 1. Temperature drives the RGB Color Engine directly
-    const isFahrenheit = temp > 55; // Auto-detect F vs C safely
+    const isFahrenheit = temp > 55;
     const normalizedTemp = isFahrenheit ? ((temp - 32) * 5/9) : temp;
     const dynamicColor = getTemperatureColor(normalizedTemp);
-
-    // 2. Wind drives the Speed
     const dynamicSpeed = 1.5 + Math.min(wind / 2.5, 8.5);
-
-    // 3. Humidity drives the Noise/Distortion
     const dynamicNoise = 0.2 + (humidity / 100) * 1.3;
-
-    // Retain base CSS structural classes
+    
     const id = data.weather[0].id;
     const main = data.weather[0].main.toLowerCase();
-    let className = 'weather-clouds';
-    if (id === 800) className = 'weather-clear';
-    else if (id < 600) className = id >= 200 && id < 300 ? 'weather-storm' : (id < 400 ? 'weather-drizzle' : 'weather-rain');
-    else if (id < 700) className = 'weather-snow';
-    else if (id < 800) className = main.includes('fog') ? 'weather-fog' : 'weather-mist';
+    let weatherClass = 'weather-clouds';
+    if (id === 800) weatherClass = 'weather-clear';
+    else if (id < 600) weatherClass = id >= 200 && id < 300 ? 'weather-storm' : (id < 400 ? 'weather-drizzle' : 'weather-rain');
+    else if (id < 700) weatherClass = 'weather-snow';
+    else if (id < 800) weatherClass = main.includes('fog') ? 'weather-fog' : 'weather-mist';
 
     return { 
       color: dynamicColor, 
       speed: dynamicSpeed, 
       noise: dynamicNoise, 
-      className 
+      weatherClass,
+      tempClass: getTemperatureClass(normalizedTemp)
     };
   }, [engine.data]);
+
+  // Handle theme change with smooth transition
+  const handleThemeChange = useCallback((theme) => {
+    setBackgroundTheme(theme);
+  }, []);
 
   // Click outside to close dropdown
   useEffect(() => {
@@ -100,7 +197,7 @@ const AtmosDashboard = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle keyboard navigation
+  // Keyboard navigation
   const handleKeyDown = (e) => {
     if (!showDropdown || engine.leads.length === 0) return;
     
@@ -151,17 +248,30 @@ const AtmosDashboard = () => {
     }
   };
 
+  // Combine all background classes
+  const backgroundClasses = [
+    'weather-dashboard',
+    BACKGROUND_PRESETS[backgroundTheme]?.className || 'bg-aurora',
+    vibe.weatherClass,
+    vibe.tempClass
+  ].filter(Boolean).join(' ');
+
   return (
-    <div className={`weather-dashboard ${vibe.className}`}>
-      {/* ============================================
-          2026 ADVANCED BACKGROUND SYSTEM
-          Multi-layered Dynamic Environment
-          ============================================ */}
+    <div className={backgroundClasses}>
+      {/* Theme Selector */}
+      <ThemeSelector 
+        currentTheme={backgroundTheme} 
+        onThemeChange={handleThemeChange} 
+      />
       
-      {/* 3D Silk background */}
-      <Silk color={vibe.color} speed={vibe.speed} noiseIntensity={vibe.noise} />
+      {/* 3D Silk background - smooth color transitions */}
+      <Silk 
+        color={vibe.color} 
+        speed={vibe.speed} 
+        noiseIntensity={vibe.noise} 
+      />
       
-      {/* Aurora Morphing Blobs - 2026 Trend */}
+      {/* Aurora Morphing Blobs */}
       <div className="aurora-container">
         <div className="aurora-blob aurora-blob-1" />
         <div className="aurora-blob aurora-blob-2" />
@@ -169,7 +279,7 @@ const AtmosDashboard = () => {
         <div className="aurora-blob aurora-blob-4" />
       </div>
       
-      {/* Floating Geometric Orbs - 2026 Trend */}
+      {/* Floating Orbs */}
       <div className="floating-orbs">
         <div className="orb orb-1" />
         <div className="orb orb-2" />
@@ -179,28 +289,18 @@ const AtmosDashboard = () => {
         <div className="orb orb-6" />
       </div>
       
-      {/* Constellation Network - Interactive Elements */}
-      <div className="constellation-grid">
-        {constellationDots.map((dot) => (
-          <div 
-            key={dot.id} 
-            className="constellation-dot"
-            style={dot.style}
-          />
-        ))}
-      </div>
+      {/* Ember Particles (only show for ember theme) */}
+      <AnimatePresence>
+        {backgroundTheme === 'ember' && <EmberParticles />}
+      </AnimatePresence>
       
-      {/* Light Leak Effects - Photography Inspired */}
-      <div className="light-leak light-leak-1" />
-      <div className="light-leak light-leak-2" />
-      
-      {/* Noise Texture Overlay */}
+      {/* Noise Overlay */}
       <div className="noise-overlay" />
       
-      {/* Soft overlay gradient */}
+      {/* Dashboard Overlay */}
       <div className="dashboard-overlay" />
       
-      {/* Main weather card */}
+      {/* Main Weather Card */}
       <motion.main 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -270,14 +370,15 @@ const AtmosDashboard = () => {
           </AnimatePresence>
         </div>
 
-        {/* Weather Display */}
+        {/* Weather Display - Seamless Transitions */}
         <AnimatePresence mode="wait">
           {engine.status === 'busy' ? (
-            <div className="loading-container">
+            <div key="loading" className="loading-container">
               <div className="loading-spinner" />
             </div>
           ) : engine.error ? (
             <motion.div 
+              key="error"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="error-container"
@@ -291,7 +392,7 @@ const AtmosDashboard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
+              transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
               className="weather-display"
             >
               <h2 className="weather-location">{engine.data.name}</h2>
@@ -321,6 +422,7 @@ const AtmosDashboard = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
               className="empty-state"
             >
               <Cloud size={48} />
