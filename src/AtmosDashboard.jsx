@@ -1,14 +1,10 @@
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navigation, AlertCircle, Droplets, Wind, Thermometer, Cloud } from 'lucide-react';
 import { useClimateEngine } from './hooks/useClimateEngine';
 import WeatherBackground from './components/WeatherBackground';
 import MetricCard from './components/MetricCard';
 import SearchIcon from './components/SearchIcon';
-
-// ============================================
-// MAIN COMPONENT
-// ============================================
 
 const AtmosDashboard = () => {
   const engine = useClimateEngine();
@@ -18,19 +14,12 @@ const AtmosDashboard = () => {
   const searchContainerRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Derive background params from live weather data
-  const bgParams = useMemo(() => {
-    const data = engine.data;
-    if (!data) return { conditionId: 800, windSpeed: 0, isDay: true, humidity: 50 };
-
-    const conditionId = data.weather[0].id;
-    const windSpeed   = data.wind.speed;
-    const humidity    = data.main.humidity;
-    // OWM icon ends in 'd' for day, 'n' for night
-    const isDay       = data.weather[0].icon?.endsWith('d') ?? true;
-
-    return { conditionId, windSpeed, isDay, humidity };
-  }, [engine.data]);
+  // Derive weather background params from live API data
+  const conditionId  = engine.data?.weather[0]?.id       ?? 800;
+  const windSpeed    = engine.data?.wind?.speed           ?? 0;
+  const isDay        = engine.data?.weather[0]?.icon
+    ? engine.data.weather[0].icon.endsWith('d')
+    : true;
 
   // Click outside to close dropdown
   useEffect(() => {
@@ -70,12 +59,12 @@ const AtmosDashboard = () => {
     }
   };
 
-  const handleSelectLead = useCallback((lead) => {
+  const handleSelectLead = (lead) => {
     engine.lookupClimate(lead.name);
     setQuery('');
     setShowDropdown(false);
     setSelectedIndex(-1);
-  }, [engine]);
+  };
 
   const handleQueryChange = (e) => {
     const value = e.target.value;
@@ -96,33 +85,29 @@ const AtmosDashboard = () => {
 
   return (
     <div className="weather-dashboard">
-      {/* Immersive atmospheric background */}
+      {/* Immersive weather background */}
       <WeatherBackground
-        conditionId={bgParams.conditionId}
-        windSpeed={bgParams.windSpeed}
-        isDay={bgParams.isDay}
-        humidity={bgParams.humidity}
+        conditionId={conditionId}
+        windSpeed={windSpeed}
+        isDay={isDay}
       />
 
-      {/* Noise Overlay */}
-      <div className="noise-overlay" />
-
-      {/* Main Weather Card */}
+      {/* Main weather card */}
       <motion.main
-        initial={{ opacity: 0, scale: 0.96 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
         className="weather-card"
       >
         {/* Header */}
         <header className="weather-header">
-          <h1 className="weather-logo">ATMOS</h1>
+          <h1 className="weather-logo">CLIMATE WEATHER</h1>
           <button
             onClick={handleGetLocation}
             className="location-button"
             aria-label="Get current location"
           >
-            <Navigation size={18} />
+            <Navigation size={20} />
           </button>
         </header>
 
@@ -148,10 +133,10 @@ const AtmosDashboard = () => {
           <AnimatePresence>
             {showDropdown && (engine.leads.length > 0 || (query.length >= 2 && !engine.leadsLoading)) && (
               <motion.div
-                initial={{ opacity: 0, y: -8 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.18 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
                 className="search-results"
                 role="listbox"
               >
@@ -180,37 +165,46 @@ const AtmosDashboard = () => {
         {/* Weather Display */}
         <AnimatePresence mode="wait">
           {engine.status === 'busy' ? (
-            <div key="loading" className="loading-container">
+            <div className="loading-container">
               <div className="loading-spinner" />
             </div>
           ) : engine.error ? (
             <motion.div
-              key="error"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="error-container"
             >
-              <AlertCircle size={44} />
+              <AlertCircle size={48} />
               <p className="error-message">{engine.error}</p>
             </motion.div>
           ) : engine.data ? (
             <motion.div
-              key={engine.data.name}
-              initial={{ opacity: 0, y: 18 }}
+              key="result"
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -18 }}
-              transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
               className="weather-display"
             >
               <h2 className="weather-location">{engine.data.name}</h2>
               <p className="weather-description">{engine.data.weather[0].description}</p>
-              <div className="temperature-display">
-                {Math.round(engine.data.main.temp)}°
-              </div>
+              <div className="temperature-display">{Math.round(engine.data.main.temp)}°</div>
               <div className="metrics-grid">
-                <MetricCard icon={Droplets} value={`${engine.data.main.humidity}%`}         label="Humidity"   />
-                <MetricCard icon={Wind}     value={`${Math.round(engine.data.wind.speed)} m/s`} label="Wind"  />
-                <MetricCard icon={Thermometer} value={`${Math.round(engine.data.main.feels_like)}°`} label="Feels Like" />
+                <MetricCard
+                  icon={Droplets}
+                  value={`${engine.data.main.humidity}%`}
+                  label="Humidity"
+                />
+                <MetricCard
+                  icon={Wind}
+                  value={`${Math.round(engine.data.wind.speed)} m/s`}
+                  label="Wind"
+                />
+                <MetricCard
+                  icon={Thermometer}
+                  value={`${Math.round(engine.data.main.feels_like)}°`}
+                  label="Feels Like"
+                />
               </div>
             </motion.div>
           ) : (
@@ -219,10 +213,9 @@ const AtmosDashboard = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
               className="empty-state"
             >
-              <Cloud size={44} />
+              <Cloud size={48} />
               <p className="empty-state-text">Search for a location</p>
             </motion.div>
           )}
