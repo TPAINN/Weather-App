@@ -401,8 +401,8 @@ export default function ParticleCanvas({ particleCfg }) {
     <canvas
       ref={canvasRef}
       style={{
-        position: 'fixed', inset: 0, zIndex: 4,
-        pointerEvents: 'none', width: '100vw', height: '100vh',
+        position: 'absolute', inset: 0, zIndex: 4,
+        pointerEvents: 'none', width: '100%', height: '100%',
       }}
     />
   );

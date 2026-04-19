@@ -28,7 +28,7 @@ function puffRGB(hf, type, isDay) {
   ];
 }
 
-// ── Per-type blur radius (px) — larger = softer/more diffuse edges ─────────
+// ── Per-type blur radius (px) ─────────────────────────────────────────────
 const TYPE_BLUR = { wispy: 24, stratus: 30, storm: 9, cumulus: 13 };
 
 // ── Build puff layout (fractions of cloud w/h) ────────────────────────────
@@ -40,63 +40,43 @@ function buildPuffs(seed, type) {
     const n = 9 + Math.floor(rand() * 6);
     for (let i = 0; i < n; i++) {
       puffs.push({
-        ox: (rand() - 0.5) * 1.5,
-        oy: (rand() - 0.5) * 0.55,
-        rw: 0.26 + rand() * 0.42,
-        rh: 0.10 + rand() * 0.16,
-        rot: (rand() - 0.5) * 0.8,
-        alpha: 0.16 + rand() * 0.20,
-        hf: 0.5 + rand() * 0.5,
-        oA: 1.5 + rand() * 2.5,
-        oF: 0.00014 + rand() * 0.00020,
-        oP: rand() * Math.PI * 2,
+        ox: (rand() - 0.5) * 1.5, oy: (rand() - 0.5) * 0.55,
+        rw: 0.26 + rand() * 0.42, rh: 0.10 + rand() * 0.16,
+        rot: (rand() - 0.5) * 0.8, alpha: 0.16 + rand() * 0.20, hf: 0.5 + rand() * 0.5,
       });
     }
   } else if (type === 'stratus') {
     for (let i = 0; i < 42; i++) {
       puffs.push({
-        ox: (rand() - 0.5) * 2.4,
-        oy: (rand() - 0.32) * 0.9,
-        rw: 0.18 + rand() * 0.34,
-        rh: 0.15 + rand() * 0.26,
-        rot: (rand() - 0.5) * 0.18,
-        alpha: 0.38 + rand() * 0.44,
-        hf: 0.35 + rand() * 0.6,
-        oA: 0.8 + rand() * 1.5,
-        oF: 0.00010 + rand() * 0.00015,
-        oP: rand() * Math.PI * 2,
+        ox: (rand() - 0.5) * 2.4, oy: (rand() - 0.32) * 0.9,
+        rw: 0.18 + rand() * 0.34, rh: 0.15 + rand() * 0.26,
+        rot: (rand() - 0.5) * 0.18, alpha: 0.38 + rand() * 0.44, hf: 0.35 + rand() * 0.6,
       });
     }
   } else if (type === 'storm') {
     for (let i = 0; i < 52; i++) {
       const isTop = rand() > 0.45;
       puffs.push({
-        ox: (rand() - 0.5) * 1.4,
-        oy: isTop ? -(rand() * 0.85) : rand() * 0.4,
-        rw: 0.18 + rand() * 0.32,
-        rh: 0.20 + rand() * 0.50,
+        ox: (rand() - 0.5) * 1.4, oy: isTop ? -(rand() * 0.85) : rand() * 0.4,
+        rw: 0.18 + rand() * 0.32, rh: 0.20 + rand() * 0.50,
         rot: (rand() - 0.5) * 0.35,
-        alpha: 0.40 + rand() * 0.55,
-        hf: isTop ? 0.55 + rand() * 0.45 : rand() * 0.4,
-        oA: 3 + rand() * 6,
-        oF: 0.00012 + rand() * 0.00018,
-        oP: rand() * Math.PI * 2,
+        alpha: 0.40 + rand() * 0.55, hf: isTop ? 0.55 + rand() * 0.45 : rand() * 0.4,
       });
     }
   } else {
     // Cumulus — three layers: base, body, crown
-    for (let i = 0; i < 12; i++) { // base
-      puffs.push({ ox: (rand()-0.5)*1.1, oy: 0.18+rand()*0.26, rw:0.18+rand()*0.22, rh:0.14+rand()*0.20, rot:(rand()-0.5)*0.3, alpha:0.52+rand()*0.36, hf:rand()*0.28, oA:2+rand()*3, oF:0.00013+rand()*0.00015, oP:rand()*Math.PI*2 });
+    for (let i = 0; i < 12; i++) {
+      puffs.push({ ox:(rand()-0.5)*1.1, oy:0.18+rand()*0.26, rw:0.18+rand()*0.22, rh:0.14+rand()*0.20, rot:(rand()-0.5)*0.3, alpha:0.52+rand()*0.36, hf:rand()*0.28 });
     }
-    for (let i = 0; i < 16; i++) { // mid body
-      puffs.push({ ox:(rand()-0.5)*0.95, oy:(rand()-0.5)*0.72, rw:0.15+rand()*0.22, rh:0.17+rand()*0.26, rot:(rand()-0.5)*0.28, alpha:0.54+rand()*0.38, hf:0.28+rand()*0.42, oA:2+rand()*4, oF:0.00011+rand()*0.00017, oP:rand()*Math.PI*2 });
+    for (let i = 0; i < 16; i++) {
+      puffs.push({ ox:(rand()-0.5)*0.95, oy:(rand()-0.5)*0.72, rw:0.15+rand()*0.22, rh:0.17+rand()*0.26, rot:(rand()-0.5)*0.28, alpha:0.54+rand()*0.38, hf:0.28+rand()*0.42 });
     }
-    for (let i = 0; i < 12; i++) { // crown (bright, sunlit top)
-      puffs.push({ ox:(rand()-0.5)*0.58, oy:-(0.18+rand()*0.44), rw:0.11+rand()*0.17, rh:0.13+rand()*0.22, rot:(rand()-0.5)*0.22, alpha:0.50+rand()*0.40, hf:0.72+rand()*0.28, oA:1.5+rand()*2.5, oF:0.00014+rand()*0.00018, oP:rand()*Math.PI*2 });
+    for (let i = 0; i < 12; i++) {
+      puffs.push({ ox:(rand()-0.5)*0.58, oy:-(0.18+rand()*0.44), rw:0.11+rand()*0.17, rh:0.13+rand()*0.22, rot:(rand()-0.5)*0.22, alpha:0.50+rand()*0.40, hf:0.72+rand()*0.28 });
     }
   }
 
-  puffs.sort((a, b) => a.hf - b.hf); // back-to-front (dim base drawn first)
+  puffs.sort((a, b) => a.hf - b.hf);
   return puffs;
 }
 
@@ -130,18 +110,66 @@ function strokePts(ctx, pts) {
   }
 }
 
+// ── OffscreenCanvas cloud texture (blur once, blit every frame) ───────────
+function createOffscreen(w, h) {
+  // Fallback to regular canvas if OffscreenCanvas unavailable
+  if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h);
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  return c;
+}
+
+function buildCloudTexture(c, W, H, isDay) {
+  const cw = c.wFrac * W;
+  const ch = c.hFrac * H;
+  const blurPx = TYPE_BLUR[c.type] || 14;
+  // Generous padding so blur doesn't clip at edges
+  const padX = blurPx * 3.5 + cw * 0.6;
+  const padY = blurPx * 3.5 + ch * 0.6;
+  const tw = Math.max(4, Math.ceil(cw * 2 + padX * 2));
+  const th = Math.max(4, Math.ceil(ch * 2 + padY * 2));
+  const oX = tw / 2;
+  const oY = th / 2;
+
+  const oc = createOffscreen(tw, th);
+  const octx = oc.getContext('2d');
+
+  octx.filter = `blur(${blurPx}px)`;
+
+  c.puffs.forEach(p => {
+    const px = oX + p.ox * cw;
+    const py = oY + p.oy * ch;
+    const rx = Math.max(2, p.rw * cw);
+    const ry = Math.max(2, p.rh * ch);
+    const [r, g, b] = puffRGB(p.hf, c.type, isDay);
+    const alpha = Math.min(0.98, p.alpha);
+
+    octx.save();
+    octx.translate(px, py);
+    octx.rotate(p.rot);
+    octx.beginPath();
+    octx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+    octx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
+    octx.fill();
+    octx.restore();
+  });
+
+  octx.filter = 'none';
+  return { canvas: oc, w: tw, h: th, oX, oY };
+}
+
 // ── Main Component ────────────────────────────────────────────────────────
 export default function SkyCanvas({ cloudCfg, sun, moon, lightningCfg, isDay = true }) {
   const canvasRef = useRef(null);
   const stateRef  = useRef({ t: 0, raf: null });
 
-  // Stable cloud definitions (puffs seeded per cloud, two parallax layers)
+  // Stable cloud definitions (seeded per cloud, two parallax layers)
   const cloudArr = useMemo(() => {
     if (!cloudCfg) return [];
     const { type, count, density, speed } = cloudCfg;
     const arr = [];
     for (let layer = 0; layer < 2; layer++) {
-      const cnt   = layer === 0 ? Math.ceil(count * 0.62) : Math.floor(count * 0.38);
+      const cnt    = layer === 0 ? Math.ceil(count * 0.62) : Math.floor(count * 0.38);
       const sScale = layer === 0 ? 1 : 0.55;
       const aScale = layer === 0 ? 1 : 0.48;
       const vScale = layer === 0 ? 1 : 0.40;
@@ -162,7 +190,6 @@ export default function SkyCanvas({ cloudCfg, sun, moon, lightningCfg, isDay = t
           bobF:  0.00022+rand()*0.00042,
           bobP:  rand()*Math.PI*2,
           type, seed, layer,
-          xOff: 0,
           puffs: buildPuffs(seed, type),
         });
       }
@@ -176,11 +203,24 @@ export default function SkyCanvas({ cloudCfg, sun, moon, lightningCfg, isDay = t
     const ctx = canvas.getContext('2d');
     const state = stateRef.current;
 
-    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    // Deep-copy clouds; texture slot starts null
+    const clouds = cloudArr.map(c => ({ ...c, xOff: 0, texture: null }));
+
+    // Build OffscreenCanvas textures for every cloud (once per weather change + resize)
+    const buildTextures = () => {
+      const W = canvas.width, H = canvas.height;
+      clouds.forEach(c => {
+        c.texture = buildCloudTexture(c, W, H, isDay);
+      });
+    };
+
+    const resize = () => {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      buildTextures();
+    };
     resize();
     window.addEventListener('resize', resize);
-
-    const clouds = cloudArr.map(c => ({ ...c }));
 
     // Lightning
     let bolt = null, flashOn = false, ltTimer = null;
@@ -188,7 +228,10 @@ export default function SkyCanvas({ cloudCfg, sun, moon, lightningCfg, isDay = t
       if (!lightningCfg) return;
       ltTimer = setTimeout(() => {
         const W=canvas.width, H=canvas.height;
-        bolt = buildBolt(W*(0.15+Math.random()*0.7), H*(0.06+Math.random()*0.12), W*(0.1+Math.random()*0.8), H*(0.58+Math.random()*0.32));
+        bolt = buildBolt(
+          W*(0.15+Math.random()*0.7), H*(0.06+Math.random()*0.12),
+          W*(0.1+Math.random()*0.8),  H*(0.58+Math.random()*0.32),
+        );
         flashOn = true;
         setTimeout(()=>{ flashOn=false; }, 65+Math.random()*85);
         setTimeout(()=>{ flashOn=true; setTimeout(()=>{ flashOn=false; bolt=null; },52); }, 105+Math.random()*75);
@@ -203,11 +246,11 @@ export default function SkyCanvas({ cloudCfg, sun, moon, lightningCfg, isDay = t
       state.t++;
       const T=state.t;
 
-      // ── Sun ─────────────────────────────────────────────────────
+      // ── Sun ─────────────────────────────────────────────────────────────
       if (sun) {
         const sx=W*sun.x/100, sy=H*sun.y/100, sr=sun.r, gc=sun.glow;
 
-        // Animated crepuscular rays
+        // Crepuscular rays
         ctx.save();
         for (let i=0;i<20;i++) {
           const ang=(i/20)*Math.PI*2 + T*0.00055;
@@ -227,7 +270,7 @@ export default function SkyCanvas({ cloudCfg, sun, moon, lightningCfg, isDay = t
         }
         ctx.restore();
 
-        // Outer corona
+        // Corona
         const og=ctx.createRadialGradient(sx,sy,sr*0.5,sx,sy,sr*6);
         og.addColorStop(0,`${gc}0.44)`); og.addColorStop(0.28,`${gc}0.15)`); og.addColorStop(1,`${gc}0)`);
         ctx.beginPath(); ctx.arc(sx,sy,sr*6,0,Math.PI*2); ctx.fillStyle=og; ctx.fill();
@@ -244,9 +287,10 @@ export default function SkyCanvas({ cloudCfg, sun, moon, lightningCfg, isDay = t
         ctx.beginPath(); ctx.arc(sx,sy,sr*1.4,0,Math.PI*2); ctx.fillStyle=sg; ctx.fill();
       }
 
-      // ── Moon ────────────────────────────────────────────────────
+      // ── Moon ────────────────────────────────────────────────────────────
       if (moon) {
         const mx=W*moon.x/100, my=H*moon.y/100, mr=moon.r, gc=moon.glow;
+
         const mg=ctx.createRadialGradient(mx,my,mr*0.5,mx,my,mr*6.5);
         mg.addColorStop(0,`${gc}0.24)`); mg.addColorStop(0.4,`${gc}0.08)`); mg.addColorStop(1,`${gc}0)`);
         ctx.beginPath(); ctx.arc(mx,my,mr*6.5,0,Math.PI*2); ctx.fillStyle=mg; ctx.fill();
@@ -268,43 +312,26 @@ export default function SkyCanvas({ cloudCfg, sun, moon, lightningCfg, isDay = t
         ctx.beginPath(); ctx.arc(mx,my,mr*2.6,0,Math.PI*2); ctx.fillStyle=hg; ctx.fill();
       }
 
-      // ── Clouds — far layer first ─────────────────────────────────
-      const sorted=[...clouds].sort((a,b)=>b.layer-a.layer);
-      const blurPx = cloudCfg ? (TYPE_BLUR[cloudCfg.type] || 14) : 14;
-
+      // ── Clouds — far layer first, GPU-blit pre-rendered textures ─────────
+      const sorted = [...clouds].sort((a, b) => b.layer - a.layer);
       sorted.forEach(c => {
         c.xOff += c.spd * 0.000065;
-        const rawX  = c.xFrac + c.xOff;
-        const absX  = (((rawX+0.25)%1.5)-0.25)*W;
-        const absY  = c.yFrac*H + Math.sin(T*c.bobF+c.bobP)*c.bobA;
-        const cw    = c.wFrac*W;
-        const ch    = c.hFrac*H;
+        const rawX = c.xFrac + c.xOff;
+        const absX = (((rawX + 0.25) % 1.5) - 0.25) * W;
+        const absY = c.yFrac * H + Math.sin(T * c.bobF + c.bobP) * c.bobA;
 
-        ctx.save();
-        ctx.filter = `blur(${blurPx}px)`;
-
-        c.puffs.forEach(p => {
-          const px = absX + p.ox*cw;
-          const py = absY + p.oy*ch + Math.sin(T*p.oF+p.oP)*p.oA;
-          const rx = p.rw*cw;
-          const ry = p.rh*ch;
-          const [r,g,b] = puffRGB(p.hf, c.type, isDay);
-          const alpha = c.alpha * p.alpha;
-
-          ctx.save();
-          ctx.translate(px, py);
-          ctx.rotate(p.rot);
-          ctx.beginPath();
-          ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI*2);
-          ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
-          ctx.fill();
-          ctx.restore();
-        });
-
-        ctx.restore(); // resets filter
+        if (c.texture) {
+          ctx.globalAlpha = Math.min(1, c.alpha);
+          ctx.drawImage(
+            c.texture.canvas,
+            Math.round(absX - c.texture.oX),
+            Math.round(absY - c.texture.oY),
+          );
+          ctx.globalAlpha = 1;
+        }
       });
 
-      // ── Lightning ────────────────────────────────────────────────
+      // ── Lightning ────────────────────────────────────────────────────────
       if (bolt && flashOn) {
         const gc=lightningCfg.color;
         ctx.fillStyle=`${gc}0.06)`; ctx.fillRect(0,0,W,H);
@@ -319,21 +346,24 @@ export default function SkyCanvas({ cloudCfg, sun, moon, lightningCfg, isDay = t
         ctx.restore();
       }
 
-      state.raf=requestAnimationFrame(animate);
+      state.raf = requestAnimationFrame(animate);
     };
 
     animate();
     return () => {
       cancelAnimationFrame(state.raf);
       clearTimeout(ltTimer);
-      window.removeEventListener('resize',resize);
+      window.removeEventListener('resize', resize);
     };
   }, [cloudArr, sun, moon, lightningCfg, isDay]);
 
   return (
-    <canvas ref={canvasRef} style={{
-      position:'fixed', inset:0, zIndex:2,
-      pointerEvents:'none', width:'100vw', height:'100vh',
-    }}/>
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute', inset: 0, zIndex: 2,
+        pointerEvents: 'none', width: '100%', height: '100%',
+      }}
+    />
   );
 }

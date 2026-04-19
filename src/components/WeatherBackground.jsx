@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import SkyCanvas from './SkyCanvas';
 import ParticleCanvas from './ParticleCanvas';
 
@@ -343,59 +344,75 @@ function getProfile(id, wind = 0, isDay = true) {
 export default function WeatherBackground({ conditionId = 800, windSpeed = 0, isDay = true }) {
   const p = useMemo(
     () => getProfile(conditionId, windSpeed, isDay),
-    [conditionId, windSpeed, isDay]
+    [conditionId, windSpeed, isDay],
   );
 
-  const skyStyle = {
-    background: `linear-gradient(to bottom, ${p.sky.z} 0%, ${p.sky.m} 28%, ${p.sky.ml} 58%, ${p.sky.h} 82%, ${p.sky.g} 100%)`,
-    transition: 'background 2.5s ease',
-  };
+  // Key changes only on meaningful visual transitions (not wind speed)
+  const bgKey = `${conditionId}-${isDay ? 'd' : 'n'}`;
+
+  const skyGradient = `linear-gradient(to bottom, ${p.sky.z} 0%, ${p.sky.m} 28%, ${p.sky.ml} 58%, ${p.sky.h} 82%, ${p.sky.g} 100%)`;
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
-      {/* Sky gradient */}
-      <div style={{ position: 'absolute', inset: 0, ...skyStyle }} />
+      {/*
+        AnimatePresence keeps both old and new backgrounds mounted during
+        the crossfade. Each key change triggers: old → exit (fade out),
+        new → enter (fade in), running simultaneously.
+      */}
+      <AnimatePresence>
+        <motion.div
+          key={bgKey}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.4, ease: 'easeInOut' }}
+          style={{ position: 'absolute', inset: 0 }}
+        >
+          {/* Sky gradient */}
+          <div style={{ position: 'absolute', inset: 0, background: skyGradient }} />
 
-      {/* Canvas: clouds + sun + moon + lightning */}
-      <SkyCanvas
-        cloudCfg={p.clouds}
-        sun={p.sun}
-        moon={p.moon}
-        lightningCfg={p.lightning || null}
-        isDay={isDay}
-      />
+          {/* Canvas: clouds + sun + moon + lightning */}
+          <SkyCanvas
+            cloudCfg={p.clouds}
+            sun={p.sun}
+            moon={p.moon}
+            lightningCfg={p.lightning || null}
+            isDay={isDay}
+          />
 
-      {/* Canvas: precipitation / stars / atmospheric particles */}
-      <ParticleCanvas particleCfg={p.particles} />
+          {/* Canvas: precipitation / stars / atmospheric particles */}
+          <ParticleCanvas particleCfg={p.particles} />
 
-      {/* Fog overlay */}
-      {p.fog && (
-        <div
-          className="atmos-fog"
-          style={{
-            opacity: p.fog.density,
-            background: `linear-gradient(to bottom,
-              transparent 0%,
-              ${p.fog.color}0.82) 35%,
-              ${p.fog.color}0.94) 62%,
-              transparent 100%)`,
-          }}
-        />
-      )}
+          {/* Fog overlay */}
+          {p.fog && (
+            <div
+              className="atmos-fog"
+              style={{
+                opacity: p.fog.density,
+                background: `linear-gradient(to bottom,
+                  transparent 0%,
+                  ${p.fog.color}0.82) 35%,
+                  ${p.fog.color}0.94) 62%,
+                  transparent 100%)`,
+              }}
+            />
+          )}
 
-      {/* Haze tint */}
-      {p.haze && (
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none',
-          background: `${p.haze.color}0.36)`,
-          mixBlendMode: 'multiply',
-        }} />
-      )}
+          {/* Haze tint */}
+          {p.haze && (
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none',
+              background: `${p.haze.color}0.36)`,
+              mixBlendMode: 'multiply',
+            }} />
+          )}
+        </motion.div>
+      </AnimatePresence>
 
-      {/* Film grain */}
+      {/* Film grain — outside AnimatePresence so it never fades */}
       <div className="atmos-grain" />
 
-      {/* Vignette */}
+      {/* Vignette — outside AnimatePresence for persistence */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 7, pointerEvents: 'none',
         background: `radial-gradient(ellipse 110% 90% at 50% 45%, transparent 28%, ${p.vignette} 100%)`,
